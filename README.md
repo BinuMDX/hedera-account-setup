@@ -2,15 +2,6 @@
 
 This repository contains the basic setup guide and code samples to configure your environment and create accounts on the **Hedera Hashgraph** network. It demonstrates how to set up a local development environment, connect to Hedera Testnet, and perform account operations.
 
-## Project Structure
-
-hedera-account-setup/
-│
-├── index.js # Example script to create an account
-├── .env # Environment variables (excluded in .gitignore)
-├── .gitignore
-└── README.md # Project documentation
-
 ## Features
 
 - Setup environment for Hedera development
