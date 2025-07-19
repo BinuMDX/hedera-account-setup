@@ -5,6 +5,10 @@ const {
   AccountBalanceQuery,
   Hbar,
   TransferTransaction,
+  TokenCreateTransaction,
+  TokenType,
+  TokenSupplyType,
+  TokenAssociateTransaction,
 } = require("@hashgraph/sdk");
 require("dotenv").config();
 
@@ -61,6 +65,66 @@ const sendHbar = await new TransferTransaction()
 // Verify the transaction reached consensus
 const transactionReceipt = await sendHbar.getReceipt(client);
 console.log(" The transfer transaction from my account to the new account was: " + transactionReceipt.status.toString());
+
+const supplyKey = PrivateKey.generate( );
+
+// CREATE FUNGIBLE TOKEN (STABLECOIN)
+let tokenCreateTx = await new TokenCreateTransaction()
+.setTokenName('USD Bar')
+.setTokenSymbol("USDB")
+.setTokenType(TokenType.FungibleCommon)
+.setDecimals(2)
+.setInitialSupply(10000)
+.setTreasuryAccountId (myAccountId)
+.setSupplyType(TokenSupplyType.Infinite)
+.setSupplyKey(supplyKey )
+.freezeWith(client) ;
+
+//SIGN WITH TREASURY KEY
+let tokenCreateSign = await tokenCreateTx.sign(PrivateKey.fromString(myPrivateKey));
+
+//SUBMIT THE TRANSACTION
+let tokenCreateSubmit = await tokenCreateSign.execute(client) ;
+
+//GET THE TRANSACTION RECEIPT
+let tokenCreateRx = await tokenCreateSubmit.getReceipt(client);
+
+//GET THE TOKEN ID
+let tokenId = tokenCreateRx.tokenId;
+
+//LOG THE TOKEN ID TO THE CONSOLE
+console.log('- Created token With ID: ${tokenId} \n' ) ;
+
+const transaction = await new TokenAssociateTransaction()
+.setAccountId(newAccountId)
+.setTokenIds([tokenId])
+.freezeWith(client)
+
+const signTx = await transaction.sign(newAccountPrivateKey)
+
+const txResponse = await signTx.execute(client)
+
+const associationReceipt = await txResponse.getReceipt(client)
+
+const transactionStatus = associationReceipt.status
+
+console.log("Transaction of association was: " +transactionStatus)
+
+const transferTransaction = await new TransferTransaction()
+ .addTokenTransfer(tokenId, myAccountId, -10)
+ .addTokenTransfer(tokenId, newAccountId, 10)
+ .freezeWith(client)
+
+ const signTransferTx = await transferTransaction.sign(PrivateKey.fromString(myPrivateKey))
+
+ const transferTxResponse = await signTransferTx.execute(client)
+
+ const transferReceipt = await transferTxResponse.getReceipt(client)
+
+ const transferStatus = transactionReceipt.status
+
+ console.log("the status of transfer token is: "+transferStatus)
+
 
 
 }
